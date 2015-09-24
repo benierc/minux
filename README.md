@@ -1,2 +1,0 @@
-# minux
-kernel
