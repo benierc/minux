@@ -3,6 +3,7 @@
 #include "screen.h"
 #include "io.h"
 #include "idt.h"
+#include "lib.h"
 
 int main(void);
 void init_pic(void);
@@ -15,14 +16,18 @@ void _start(void)
     cursorAttr = 0x5E;
 
     init_idt();
-	print("kernel : idt loaded\n");
+    print("kernel : idt loaded\n");
 
-	init_pic();
-	print("kernel : pic configured\n");
+    init_pic();
+    print("kernel : pic configured\n");
 
 
     /* initialisation de la GDT et des segments */
     init_gdt();
+    print("gdt configured\n");
+    asm("   movw $0x38, %ax \n \
+            ltr %ax");
+    print("ldt configured\n");
 
     /* Initialisation du pointeur de pile %esp */
     asm("   movw $0x18, %ax \n \
@@ -32,19 +37,41 @@ void _start(void)
     main();
 }
 
+void task1(void)
+{
+    print("task1\n");
+    while(1);
+    return;
+}
+
 int main(void)
 {
-    cursorAttr = 0x4E;
-    print("kernel : new gdt loaded !\n");
+    //hide_cursor();
 
-    show_cursor();
+    memcpy((char *)0x30000, &task1, 100);
 
-	sti;
+    ///* EFLAGS
+    // * bit9 Interupt flags(IF) à 1
+    // * bit14 Nested Task (NT) à 0 */
+    ///* CS */
+    ///* update default_tss.esp0 */
+    ///* data segment user mode: 0x28 + 3*/
+    asm("   cli \n \
+            push $0x33 \n \
+            push $0x30000 \n \
+            pushfl \n \
+            popl %%eax \n \
+            orl $0x200, %%eax \n \
+            and $0xFFFFBFFF, %%eax \n \
+            push %%eax \n \
+            push $0x23 \n \
+            push $0x0 \n \
+            movl $0x20000, %0 \n \
+            movw $0x2B, %%ax \n \
+            movw %%ax, %%ds \n \
+            iret": "=m"(default_tss.esp0):);
 
-	cursorAttr = 0x47;
-	print("kernel : allowing interrupt\n");
-	cursorAttr = 0x07;
-
-
-    while (1);
+        /* never reached ! */
+        print("Critical error, halting system\n");
+    asm("hlt");
 }

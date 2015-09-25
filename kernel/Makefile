@@ -1,4 +1,4 @@
-CC=gcc -Wall -m32
+CC=gcc -Wall -m32 -g
 LD=/home/clement/work/efl/OS/minux/binutils/i386-unknown-linux-gnu/bin/ld
 
 all: kernel

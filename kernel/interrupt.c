@@ -5,7 +5,7 @@
 
 void isr_default_int(void)
 {
-    print("interrupt\n");
+    //print("interrupt\n");
 }
 
 void isr_clock_int(void)
@@ -19,6 +19,12 @@ void isr_clock_int(void)
         tic = 0;
         print("clock\n");
     }
+}
+
+void isr_GP_exc(void)
+{
+    print("GP fault\n");
+    while (1);
 }
 
 void isr_kbd_int(void)
