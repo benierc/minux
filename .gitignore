@@ -1,0 +1,7 @@
+*.o
+*~
+.*~
+floppyA
+boot/bootsect
+kernel/kernel
+.*.swp
