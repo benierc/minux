@@ -5,12 +5,16 @@
 #include "io.h"
 #include "idt.h"
 #include "mm.h"
+#include "process.h"
 
 void init_pic(void);
 int main(void);
 
 extern char cursorY;
 extern char cursorAttr;
+extern struct process p_list[32];
+extern struct process *current;
+extern int n_proc;
 
 void _start(void)
 {
@@ -30,7 +34,9 @@ void _start(void)
 
 void task1(void)
 {
-    char *msg = (char *) 0x40000100;	/* le message sera stocké en 0x100100 */
+    char *msg = (char *) 0x40001000;
+    int i;
+
     msg[0] = 't';
     msg[1] = 'a';
     msg[2] = 's';
@@ -39,10 +45,33 @@ void task1(void)
     msg[5] = '\n';
     msg[6] = 0;
 
-    asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30"::"m"(msg));
+    while (1) {
+        asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30":: "m"(msg));
+        for (i = 0; i < 1000000; i++);
+    }
 
-    while (1);
-    return;			/* never go there */
+    return;                 /* never go there */
+}
+
+void task2(void)
+{
+    char *msg = (char *) 0x40001000;
+    int i;
+
+    msg[0] = 't';
+    msg[1] = 'a';
+    msg[2] = 's';
+    msg[3] = 'k';
+    msg[4] = '2';
+    msg[5] = '\n';
+    msg[6] = 0;
+
+    while (1) {
+        asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30":: "m"(msg));
+        for (i = 0; i < 1000000; i++);
+    }
+
+    return;                 /* never go there */
 }
 
 int main(void)
@@ -67,29 +96,14 @@ int main(void)
     init_mm();
     printk("kernel : paging enable\n");
 
-    pd = pd_create_task1();
-    memcpy((char *) 0x100000, (char *) &task1, 100);	/* copie de 100 instructions */
-    printk("kernel : task created\n");
+
+    load_task((u32 *) 0x100000, (u32 *) & task1, 0x2000);
+    load_task((u32 *) 0x200000, (u32 *) & task2, 0x2000);
 
     cursorAttr = 0x47;
-    printk("kernel : trying switch to user task...\n");
+    printk("kernel : scheduler enable\n");
     cursorAttr = 0x07;
-    asm ("   cli \n \
-            movl $0x20000, %0 \n \
-            movl %1, %%eax \n \
-            movl %%eax, %%cr3 \n \
-            push $0x33 \n \
-            push $0x40000F00 \n \
-            pushfl \n \
-            popl %%eax \n \
-            orl $0x200, %%eax \n \
-            and $0xFFFFBFFF, %%eax \n \
-            push %%eax \n \
-            push $0x23 \n \
-            push $0x40000000 \n \
-            movw $0x2B, %%ax \n \
-            movw %%ax, %%ds \n \
-            iret" : "=m"(default_tss.esp0) : "m"(pd));
+    sti;
 
     while (1);
 }

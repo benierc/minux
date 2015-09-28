@@ -2,6 +2,7 @@
 #include "screen.h"
 #include "io.h"
 #include "kbd.h"
+#include "schedule.h"
 
 void isr_default_int(void)
 {
@@ -19,6 +20,7 @@ void isr_clock_int(void)
         tic = 0;
         print("clock\n");
     }
+    schedule();
 }
 
 void isr_GP_exc(void)

@@ -24,6 +24,6 @@ void init_mm(void);
 char *get_page_frame(void);
 
 /* create a table directory for a task */
-u32 *pd_create_task1(void);
+u32 *pd_create(u32 *code_phys_addr, unsigned int code_size);
 
 #endif
