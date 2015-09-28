@@ -1,5 +1,5 @@
-extern isr_default_int, isr_clock_int, isr_kbd_int, isr_GP_exc
-global _asm_default_int, _asm_irq_0, _asm_irq_1, _asm_exc_GP
+extern isr_default_int, isr_clock_int, isr_kbd_int, isr_GP_exc, do_syscalls
+global _asm_default_int, _asm_irq_0, _asm_irq_1, _asm_exc_GP, _asm_syscalls
 
 %macro  PUSH_REGS 0
     pushad
@@ -49,5 +49,13 @@ _asm_irq_1:
     call isr_kbd_int
     mov al, 0x20
     out 0x20, al
+    POP_REGS
+    iret
+
+_asm_syscalls:
+    PUSH_REGS
+    push eax        ;transmission numero dappel
+    call do_syscalls
+    pop eax
     POP_REGS
     iret

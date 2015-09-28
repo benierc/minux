@@ -7,6 +7,7 @@ void _asm_default_int(void);
 void _asm_exc_GP(void);
 void _asm_irq_0(void);
 void _asm_irq_1(void);
+void _asm_syscalls(void);
 
 void init_idt_desc(u16 seg, u32 offset, u16 type, struct idtdesc *desc)
 {
@@ -28,6 +29,10 @@ void init_idt(void)
 
     init_idt_desc(0x08, (u32) _asm_irq_0, INTGATE, &kidt[32]); //horloge
     init_idt_desc(0x08, (u32) _asm_irq_1, INTGATE, &kidt[33]); //clavier
+
+    /* trap gate - syscalls - int 0x30*/
+    init_idt_desc(0x08, (u32) _asm_syscalls, TRAPGATE, &kidt[48]);
+
 
     /* init IDTR structure */
     kidtr.limit = IDTSIZE * 8;

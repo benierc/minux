@@ -39,7 +39,16 @@ void _start(void)
 
 void task1(void)
 {
-    print("task1\n");
+    char *msg = (char *) 0x100; /* message at 0x30100 */
+    msg[0] = 't';
+    msg[1] = 'a';
+    msg[2] = 's';
+    msg[3] = 'k';
+    msg[4] = '1';
+    msg[5] = '\n';
+    msg[6] = '\0';
+
+    asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30"::"m"(msg)); /* call syscalls, num 1 */
     while(1);
     return;
 }

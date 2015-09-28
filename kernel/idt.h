@@ -5,8 +5,21 @@
 #define IDTSIZE 0xFF
 
 #define INTGATE 0x8E00
+#define TRAPGATE 0xEF00
 
 /* segment descriptor */
+/* task
+ * |RESERVED            |P|DPL|0|0|1|0|1|RESERVED|
+ * |SEGMENT SELECTOR TSS|RESERVED                |
+
+ * interrupt
+ * |SHIFT                    |P|DPL|0|1|1|1|0|0|0|0|RESERVED|
+ * |SEGMENT SELECTOR TSS     |SHIFT                         |
+
+ * trap
+ * |SHIFT                    |P|DPL|0|1|1|1|1|0|0|0|RESERVED|
+ * |SEGMENT SELECTOR TSS     |SHIFT                         |
+ */
 struct idtdesc {
     u16 offset15_0;
     u16 seg;
