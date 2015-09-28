@@ -1,89 +1,95 @@
 #include "types.h"
+#include "lib.h"
 #include "gdt.h"
 #include "screen.h"
 #include "io.h"
 #include "idt.h"
-#include "lib.h"
 #include "mm.h"
 
-int main(void);
 void init_pic(void);
+int main(void);
+
 extern char cursorY;
 extern char cursorAttr;
 
 void _start(void)
 {
-    cursorY = 18;
-    cursorAttr = 0x5E;
+    cursorY = 16;
+    cursorAttr = 0x0E;
 
-    init_idt();
-    print("kernel : idt loaded\n");
-
-    init_pic();
-    print("kernel : pic configured\n");
-
-
-    /* initialisation de la GDT et des segments */
+    /* Initialisation de la GDT et des segments */
     init_gdt();
-    print("gdt configured\n");
-    asm("   movw $0x38, %ax \n \
-            ltr %ax");
-    print("ldt configured\n");
 
     /* Initialisation du pointeur de pile %esp */
     asm("   movw $0x18, %ax \n \
             movw %ax, %ss \n \
             movl $0x20000, %esp");
 
-    init_mm();
-
     main();
 }
 
 void task1(void)
 {
-    char *msg = (char *) 0x100; /* message at 0x30100 */
+    char *msg = (char *) 0x40000100;	/* le message sera stock� en 0x100100 */
     msg[0] = 't';
     msg[1] = 'a';
     msg[2] = 's';
     msg[3] = 'k';
     msg[4] = '1';
     msg[5] = '\n';
-    msg[6] = '\0';
+    msg[6] = 0;
 
-    asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30"::"m"(msg)); /* call syscalls, num 1 */
-    while(1);
-    return;
+    asm("mov %0, %%ebx; mov $0x01, %%eax; int $0x30"::"m"(msg));
+
+    while (1);
+    return;			/* never go there */
 }
 
 int main(void)
 {
-    //hide_cursor();
+    u32 *pd;
 
-    memcpy((char *)0x30000, &task1, 100);
+    printk("kernel : gdt loaded\n");
 
-    ///* EFLAGS
-    // * bit9 Interupt flags(IF) à 1
-    // * bit14 Nested Task (NT) à 0 */
-    ///* CS */
-    ///* update default_tss.esp0 */
-    ///* data segment user mode: 0x28 + 3*/
-    asm("   cli \n \
+    init_idt();
+    printk("kernel : idt loaded\n");
+
+    init_pic();
+    printk("kernel : pic configured\n");
+
+    hide_cursor();
+
+    /* Initialisation du TSS */
+    asm("	movw $0x38, %ax \n \
+            ltr %ax");
+    printk("kernel : tr loaded\n");
+
+    init_mm();
+    printk("kernel : paging enable\n");
+
+    pd = pd_create_task1();
+    memcpy((char *) 0x100000, (char *) &task1, 100);	/* copie de 100 instructions */
+    printk("kernel : task created\n");
+
+    cursorAttr = 0x47;
+    printk("kernel : trying switch to user task...\n");
+    cursorAttr = 0x07;
+    asm ("   cli \n \
+            movl $0x20000, %0 \n \
+            movl %1, %%eax \n \
+            movl %%eax, %%cr3 \n \
             push $0x33 \n \
-            push $0x30000 \n \
+            push $0x40000F00 \n \
             pushfl \n \
             popl %%eax \n \
             orl $0x200, %%eax \n \
             and $0xFFFFBFFF, %%eax \n \
             push %%eax \n \
             push $0x23 \n \
-            push $0x0 \n \
-            movl $0x20000, %0 \n \
+            push $0x40000000 \n \
             movw $0x2B, %%ax \n \
             movw %%ax, %%ds \n \
-            iret": "=m"(default_tss.esp0):);
+            iret" : "=m"(default_tss.esp0) : "m"(pd));
 
-        /* never reached ! */
-        print("Critical error, halting system\n");
-    asm("hlt");
+    while (1);
 }
