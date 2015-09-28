@@ -27,6 +27,23 @@ void isr_GP_exc(void)
     while (1);
 }
 
+void isr_PF_exc(void)
+{
+    u32 faulting_addr;
+    u32 eip;
+
+    asm("   movl 60(%%ebp), %%eax; \
+            mov %%eax, %0;         \
+            mov %%cr2, %%eax;      \
+            mov %%eax, %1": "=m"(eip), "=m"(faulting_addr): );
+
+        print("#PF\n");
+    dump((uchar *) &faulting_addr, 4);
+    dump((uchar *) &eip, 4);
+
+    asm("hlt");
+}
+
 void isr_kbd_int(void)
 {
     uchar i;

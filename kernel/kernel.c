@@ -4,6 +4,7 @@
 #include "io.h"
 #include "idt.h"
 #include "lib.h"
+#include "mm.h"
 
 int main(void);
 void init_pic(void);
@@ -33,6 +34,8 @@ void _start(void)
     asm("   movw $0x18, %ax \n \
             movw %ax, %ss \n \
             movl $0x20000, %esp");
+
+    init_mm();
 
     main();
 }

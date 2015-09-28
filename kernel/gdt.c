@@ -44,6 +44,7 @@ void init_gdt(void)
 
     init_gdt_desc((u32) & default_tss, 0x67, 0xE9, 0x00, &kgdt[7]);	/* descripteur de tss */
 
+
 	/* initialisation de la structure pour GDTR */
 	kgdtr.limit = GDTSIZE * 8;
 	kgdtr.base = GDTBASE;
