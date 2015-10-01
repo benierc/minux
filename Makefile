@@ -20,3 +20,6 @@ clean:
 
 run:
 	qemu-system-i386 -boot a -fda floppyA
+
+gdb:
+	qemu-system-i386 -boot a -fda floppyA -s -S

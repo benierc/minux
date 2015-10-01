@@ -35,7 +35,6 @@ void init_idt(void)
     /* trap gate - syscalls - int 0x30*/
     init_idt_desc(0x08, (u32) _asm_syscalls, TRAPGATE, &kidt[48]);
 
-
     /* init IDTR structure */
     kidtr.limit = IDTSIZE * 8;
     kidtr.base = IDTBASE;

@@ -2,6 +2,7 @@
 #include "screen.h"
 #include "io.h"
 #include "kbd.h"
+#include "schedule.h"
 
 void isr_default_int(void)
 {
@@ -19,6 +20,7 @@ void isr_clock_int(void)
         tic = 0;
         print("clock\n");
     }
+    schedule();
 }
 
 void isr_GP_exc(void)
@@ -26,6 +28,7 @@ void isr_GP_exc(void)
     print("GP fault\n");
     while (1);
 }
+
 
 void isr_PF_exc(void)
 {
@@ -37,9 +40,7 @@ void isr_PF_exc(void)
             mov %%cr2, %%eax;      \
             mov %%eax, %1": "=m"(eip), "=m"(faulting_addr): );
 
-        print("#PF\n");
-    dump((uchar *) &faulting_addr, 4);
-    dump((uchar *) &eip, 4);
+        printk("#PF on eip: %p. cr2: %p\n", eip, faulting_addr);
 
     asm("hlt");
 }

@@ -2,7 +2,6 @@
 #include "lib.h"
 #include "gdt.h"
 
-
 /*
  * 'init_desc' initialise un descripteur de segment situe en gdt ou en ldt.
  * 'desc' est l'adresse lineaire du descripteur a initialiser.
@@ -38,8 +37,8 @@ void init_gdt(void)
 	init_gdt_desc(0x0, 0xFFFFF, 0x93, 0x0D, &kgdt[2]);	/* data */
 	init_gdt_desc(0x0, 0x0, 0x97, 0x0D, &kgdt[3]);		/* stack */
 
-    init_gdt_desc(0x30000, 0x1, 0xFF, 0x0D, &kgdt[4]);	/* ucode */
-    init_gdt_desc(0x30000, 0x1, 0xF3, 0x0D, &kgdt[5]);	/* udata */
+    init_gdt_desc(0x0, 0xFFFFF, 0xFF, 0x0D, &kgdt[4]);	/* ucode */
+    init_gdt_desc(0x0, 0xFFFFF, 0xF3, 0x0D, &kgdt[5]);	/* udata */
     init_gdt_desc(0x0, 0x0, 0xF7, 0x0D, &kgdt[6]);		/* ustack */
 
     init_gdt_desc((u32) & default_tss, 0x67, 0xE9, 0x00, &kgdt[7]);	/* descripteur de tss */
@@ -56,6 +55,10 @@ void init_gdt(void)
 	asm("lgdtl (kgdtr)");
 
 	/* initialisation des segments */
+    /* mov 16, ds es fs gs:
+     * data is in &kgdt[2] and
+     * sizeof gdt=64bits=8bytes
+     * ljmp 0x8 , $next put 0x8 in CS */
     asm("   movw $0x10, %ax \n \
             movw %ax, %ds   \n \
             movw %ax, %es   \n \
